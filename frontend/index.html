@@ -1,0 +1,773 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Attack Risk Prediction</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f6fa;
+            color: #263238;
+            line-height: 1.6;
+        }
+
+        header {
+            background: #163b5c;
+            color: white;
+            padding: 28px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+
+        header p {
+            color: #dbe8f2;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        h2 {
+            color: #163b5c;
+            margin-bottom: 8px;
+        }
+
+        .description {
+            color: #687782;
+            margin-bottom: 22px;
+            font-size: 14px;
+        }
+
+        .section-title {
+            font-size: 17px;
+            color: #245c80;
+            border-bottom: 1px solid #e4ebf0;
+            padding-bottom: 8px;
+            margin: 25px 0 18px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #394b59;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ccd6df;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            color: #263238;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2676a8;
+            box-shadow: 0 0 0 2px rgba(38, 118, 168, 0.12);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 12px 22px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .primary-button {
+            background: #176b87;
+            color: white;
+        }
+
+        .primary-button:hover {
+            background: #10546b;
+        }
+
+        .secondary-button {
+            background: #e8eef3;
+            color: #29465a;
+        }
+
+        .secondary-button:hover {
+            background: #d9e3eb;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #statusMessage {
+            margin-top: 15px;
+            font-size: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        #resultBox {
+            display: none;
+            margin-top: 22px;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #176b87;
+            background: #edf7fa;
+        }
+
+        #resultBox h3 {
+            margin-bottom: 8px;
+            color: #163b5c;
+        }
+
+        #predictionValue {
+            font-size: 23px;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+
+        .result-note {
+            color: #536571;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 15px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #e5ebf0;
+        }
+
+        th {
+            background: #edf3f7;
+            color: #29465a;
+            white-space: nowrap;
+        }
+
+        tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .empty-message {
+            color: #687782;
+            padding: 15px 0;
+            font-size: 14px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #74818b;
+            font-size: 12px;
+        }
+
+        @media (max-width: 800px) {
+            .form-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 520px) {
+            header h1 {
+                font-size: 23px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Heart Attack Risk Prediction</h1>
+    <p>Machine learning-based prediction using patient health and lifestyle information</p>
+</header>
+
+<main class="container">
+
+    <form id="predictionForm" class="card" novalidate>
+        <h2>Patient Information</h2>
+        <p class="description">
+            Enter the patient's details below to generate a model prediction.
+        </p>
+
+        <h3 class="section-title">Basic Information</h3>
+
+        <div class="form-grid">
+            <div class="field">
+                <label for="Age">Age</label>
+                <input type="number" id="Age" name="Age" min="1" max="120" required>
+            </div>
+
+            <div class="field">
+                <label for="Gender">Gender</label>
+                <select id="Gender" name="Gender" required>
+                    <option value="">Select gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="State_Name">State</label>
+                <input type="text" id="State_Name" name="State_Name" required>
+            </div>
+
+            <div class="field">
+                <label for="Annual_Income">Annual Income</label>
+                <input type="number" id="Annual_Income" name="Annual_Income" min="0" required>
+            </div>
+
+            <div class="field">
+                <label for="Health_Insurance">Health Insurance</label>
+                <select id="Health_Insurance" name="Health_Insurance" required>
+                    <option value="">Select option</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+        </div>
+
+        <h3 class="section-title">Medical History</h3>
+
+        <div class="form-grid">
+            <div class="field">
+                <label for="Diabetes">Diabetes</label>
+                <select id="Diabetes" name="Diabetes" required>
+                    <option value="">Select option</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="Hypertension">Hypertension</label>
+                <select id="Hypertension" name="Hypertension" required>
+                    <option value="">Select option</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="Obesity">Obesity</label>
+                <select id="Obesity" name="Obesity" required>
+                    <option value="">Select option</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="Smoking">Smoking</label>
+                <select id="Smoking" name="Smoking" required>
+                    <option value="">Select option</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="Alcohol_Consumption">Alcohol Consumption</label>
+                <input type="text" id="Alcohol_Consumption"
+                       name="Alcohol_Consumption" required>
+            </div>
+
+            <div class="field">
+                <label for="Family_History">Family History</label>
+                <select id="Family_History" name="Family_History" required>
+                    <option value="">Select option</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="Heart_Attack_History">Previous Heart Attack</label>
+                <select id="Heart_Attack_History" name="Heart_Attack_History" required>
+                    <option value="">Select option</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+        </div>
+
+        <h3 class="section-title">Health Measurements</h3>
+
+        <div class="form-grid">
+            <div class="field">
+                <label for="Cholesterol_Level">Cholesterol Level</label>
+                <input type="number" id="Cholesterol_Level"
+                       name="Cholesterol_Level" step="any" required>
+            </div>
+
+            <div class="field">
+                <label for="Triglyceride_Level">Triglyceride Level</label>
+                <input type="number" id="Triglyceride_Level"
+                       name="Triglyceride_Level" step="any" required>
+            </div>
+
+            <div class="field">
+                <label for="LDL_Level">LDL Level</label>
+                <input type="number" id="LDL_Level"
+                       name="LDL_Level" step="any" required>
+            </div>
+
+            <div class="field">
+                <label for="HDL_Level">HDL Level</label>
+                <input type="number" id="HDL_Level"
+                       name="HDL_Level" step="any" required>
+            </div>
+
+            <div class="field">
+                <label for="Systolic_BP">Systolic Blood Pressure</label>
+                <input type="number" id="Systolic_BP"
+                       name="Systolic_BP" step="any" required>
+            </div>
+
+            <div class="field">
+                <label for="Diastolic_BP">Diastolic Blood Pressure</label>
+                <input type="number" id="Diastolic_BP"
+                       name="Diastolic_BP" step="any" required>
+            </div>
+
+            <div class="field">
+                <label for="Diet_Score">Diet Score</label>
+                <input type="number" id="Diet_Score"
+                       name="Diet_Score" step="any" required>
+            </div>
+        </div>
+
+        <h3 class="section-title">Lifestyle and Environment</h3>
+
+        <div class="form-grid">
+            <div class="field">
+                <label for="Physical_Activity">Physical Activity</label>
+                <input type="text" id="Physical_Activity"
+                       name="Physical_Activity" required>
+            </div>
+
+            <div class="field">
+                <label for="Air_Pollution_Exposure">Air Pollution Exposure</label>
+                <input type="text" id="Air_Pollution_Exposure"
+                       name="Air_Pollution_Exposure" required>
+            </div>
+
+            <div class="field">
+                <label for="Stress_Level">Stress Level</label>
+                <input type="text" id="Stress_Level"
+                       name="Stress_Level" required>
+            </div>
+
+            <div class="field">
+                <label for="Healthcare_Access">Healthcare Access</label>
+                <input type="text" id="Healthcare_Access"
+                       name="Healthcare_Access" required>
+            </div>
+
+            <div class="field">
+                <label for="Emergency_Response_Time">Emergency Response Time</label>
+                <input type="number" id="Emergency_Response_Time"
+                       name="Emergency_Response_Time" step="any" required>
+            </div>
+        </div>
+
+        <div class="button-row">
+            <button type="button" class="primary-button" id="predictButton">
+                Predict Risk
+            </button>
+
+            <button type="reset" class="secondary-button">
+                Clear Form
+            </button>
+        </div>
+
+        <p id="statusMessage" role="status" aria-live="polite"></p>
+
+        <section id="resultBox" aria-live="polite">
+            <h3>Prediction Result</h3>
+            <p id="predictionValue"></p>
+            <p id="modelValue"></p>
+            <p class="result-note">
+                This result is generated by a machine learning model for project
+                demonstration. It is not a medical diagnosis or a substitute for
+                professional medical advice.
+            </p>
+        </section>
+    </form>
+
+    <section class="card">
+        <h2>Prediction History</h2>
+        <p class="description">
+            Previously submitted predictions recorded by the backend.
+        </p>
+
+        <div class="button-row">
+            <button type="button" class="secondary-button" id="refreshHistoryButton">
+                Refresh History
+            </button>
+        </div>
+
+        <p id="historyStatus" role="status" aria-live="polite"></p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>Prediction</th>
+                        <th>Recorded At</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                    <tr>
+                        <td colspan="5" class="empty-message">
+                            Loading prediction history...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    Heart Attack Risk Prediction | Machine Learning Project
+</footer>
+
+<script>
+    // Change this only if your FastAPI server uses a different port.
+    const API_URL = "http://127.0.0.1:8000";
+
+    const predictionForm = document.getElementById("predictionForm");
+    const predictButton = document.getElementById("predictButton");
+    const statusMessage = document.getElementById("statusMessage");
+    const resultBox = document.getElementById("resultBox");
+    const predictionValue = document.getElementById("predictionValue");
+    const modelValue = document.getElementById("modelValue");
+    const historyBody = document.getElementById("historyBody");
+    const historyStatus = document.getElementById("historyStatus");
+
+    // These keys must match the fields expected by backend/main.py.
+    const numericFields = [
+        "Age",
+        "Annual_Income",
+        "Cholesterol_Level",
+        "Triglyceride_Level",
+        "LDL_Level",
+        "HDL_Level",
+        "Systolic_BP",
+        "Diastolic_BP",
+        "Diet_Score",
+        "Emergency_Response_Time"
+    ];
+
+    const FORM_STORAGE_KEY = "heartPredictionFormState";
+    const RESULT_STORAGE_KEY = "heartPredictionResultState";
+
+    function saveFormState() {
+        const values = {};
+        for (const [key, value] of new FormData(predictionForm).entries()) {
+            values[key] = value;
+        }
+        localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(values));
+    }
+
+    function restoreFormState() {
+        try {
+            const values = JSON.parse(localStorage.getItem(FORM_STORAGE_KEY) || "{}");
+            for (const [key, value] of Object.entries(values)) {
+                const field = predictionForm.elements.namedItem(key);
+                if (field) field.value = value;
+            }
+        } catch (error) {
+            console.warn("Could not restore saved form values:", error);
+        }
+    }
+
+    function saveResultState(prediction, model, message) {
+        localStorage.setItem(RESULT_STORAGE_KEY, JSON.stringify({
+            prediction,
+            model,
+            message
+        }));
+    }
+
+    function restoreResultState() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(RESULT_STORAGE_KEY) || "null");
+            if (!saved) return;
+
+            predictionValue.textContent = `Model output: ${saved.prediction}`;
+            modelValue.textContent = `Model used: ${saved.model}`;
+            resultBox.style.display = "block";
+            statusMessage.textContent = saved.message || "Prediction generated successfully.";
+            statusMessage.style.color = "#176b55";
+        } catch (error) {
+            console.warn("Could not restore saved prediction:", error);
+        }
+    }
+
+    async function predictRisk() {
+        if (!predictionForm.reportValidity()) {
+            return;
+        }
+
+        const patient = {};
+
+        for (const [key, value] of new FormData(predictionForm).entries()) {
+            patient[key] = numericFields.includes(key)
+                ? Number(value)
+                : value.trim();
+        }
+
+        statusMessage.textContent = "Generating prediction...";
+        statusMessage.style.color = "#526572";
+        predictButton.disabled = true;
+
+        try {
+            console.log("Sending patient data:", patient);
+
+            const response = await fetch(`${API_URL}/predict`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(patient)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail
+                        ? JSON.stringify(data.detail)
+                        : `Request failed with status ${response.status}`
+                );
+            }
+
+            predictionValue.textContent =
+                `Model output: ${data.prediction}`;
+
+            modelValue.textContent =
+                `Model used: ${data.model || "K-Nearest Neighbors"}`;
+
+            resultBox.style.display = "block";
+
+            statusMessage.textContent =
+                data.message || "Prediction generated successfully.";
+
+            statusMessage.style.color = "#176b55";
+
+            // Preserve the form and result if the browser reloads or navigates.
+            saveFormState();
+            saveResultState(
+                data.prediction,
+                data.model || "K-Nearest Neighbors",
+                data.message || "Prediction generated successfully."
+            );
+
+
+        } catch (error) {
+            console.error("Prediction error:", error);
+
+            statusMessage.textContent =
+                `Could not generate prediction: ${error.message}. ` +
+                "Check that the backend is running and the API URL is correct.";
+
+            statusMessage.style.color = "#b42318";
+
+        } finally {
+            predictButton.disabled = false;
+        }
+    }
+
+    async function loadHistory() {
+        historyStatus.textContent = "Loading history...";
+        historyBody.replaceChildren();
+
+        try {
+            const response = await fetch(`${API_URL}/history?limit=10`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail || `Request failed with status ${response.status}`
+                );
+            }
+
+            // Supports either a direct array or an object containing history.
+            const records = Array.isArray(data)
+                ? data
+                : (data.history || data.predictions || data.records || []);
+
+            if (!Array.isArray(records) || records.length === 0) {
+                historyBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="empty-message">
+                            No prediction history available yet.
+                        </td>
+                    </tr>
+                `;
+
+                historyStatus.textContent = "";
+                return;
+            }
+
+            for (const record of records) {
+                const row = document.createElement("tr");
+
+                // Use textContent to safely display values from the API.
+                const id = record.id ?? record.ID ?? "-";
+                const patientData =
+                    record.patient_data ?? record.patient ?? record.data ?? {};
+
+                let patient = patientData;
+
+                if (typeof patientData === "string") {
+                    try {
+                        patient = JSON.parse(patientData);
+                    } catch {
+                        patient = {};
+                    }
+                }
+
+                const age = record.Age ?? patient.Age ?? "-";
+                const gender = record.Gender ?? patient.Gender ?? "-";
+                const prediction =
+                    record.prediction ?? record.Prediction ?? "-";
+                const recordedAt =
+                    record.created_at ??
+                    record.timestamp ??
+                    record.recorded_at ??
+                    record.date ??
+                    "-";
+
+                [id, age, gender, prediction, recordedAt].forEach(value => {
+                    const cell = document.createElement("td");
+                    cell.textContent = String(value);
+                    row.appendChild(cell);
+                });
+
+                historyBody.appendChild(row);
+            }
+
+            historyStatus.textContent = "";
+
+        } catch (error) {
+            console.error("History error:", error);
+
+            historyBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="empty-message">
+                        Unable to load history. Check the backend connection.
+                    </td>
+                </tr>
+            `;
+
+            historyStatus.textContent = error.message;
+        }
+    }
+
+    // Prevent native form submission/reload if Enter is pressed in a field.
+    predictionForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        predictRisk();
+    });
+
+    predictButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        predictRisk();
+    });
+
+    document.getElementById("refreshHistoryButton")
+        .addEventListener("click", loadHistory);
+
+    predictionForm.addEventListener("reset", () => {
+        resultBox.style.display = "none";
+        statusMessage.textContent = "";
+        localStorage.removeItem(FORM_STORAGE_KEY);
+        localStorage.removeItem(RESULT_STORAGE_KEY);
+    });
+
+    predictionForm.addEventListener("input", saveFormState);
+    predictionForm.addEventListener("change", saveFormState);
+
+    // Restore saved values/results if the browser reloads or navigates.
+    restoreFormState();
+    restoreResultState();
+
+    // Confirm this version is loaded in the browser console.
+    console.log("Heart Attack Risk Prediction frontend loaded.");
+
+    loadHistory();
+</script>
+
+</body>
+</html>
